@@ -1,8 +1,7 @@
 use anyhow::Context;
-use std::path::Path;
-
 use dll_syringe::process::{BorrowedProcess, OwnedProcess, OwnedProcessModule, Process};
 use dll_syringe::Syringe;
+use std::path::Path;
 
 /// Inject the given `payload_dll` into a running process.
 ///

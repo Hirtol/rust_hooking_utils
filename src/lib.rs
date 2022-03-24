@@ -1,11 +1,11 @@
 //! This library contains utilities and re-exports the dependencies.
 pub use detour;
-#[cfg(feature = "injection")]
+#[cfg(feature = "launching")]
 pub use dll_syringe;
 pub use patternscan;
 
-#[cfg(feature = "injection")]
+#[cfg(feature = "launching")]
 pub mod launching;
 
-#[cfg(feature = "injection")]
-pub mod injecting;
+#[cfg(feature = "patching")]
+pub mod patching;

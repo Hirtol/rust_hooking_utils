@@ -6,6 +6,8 @@ use dll_syringe::process::OwnedProcess;
 pub use windows::Win32::System::Threading;
 use windows::Win32::System::Threading::{PROCESS_INFORMATION, STARTUPINFOW};
 
+pub mod injecting;
+
 /// Launch the given executable within the provided `working_dir`.
 ///
 /// # Returns
