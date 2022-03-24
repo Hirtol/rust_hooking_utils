@@ -1,8 +1,11 @@
 //! This library contains utilities and re-exports the dependencies.
-#[cfg(feature = "game-scanner")]
-pub use game_scanner;
+pub use detour;
 #[cfg(feature = "injection")]
 pub use dll_syringe;
-
-pub use detour;
 pub use patternscan;
+
+#[cfg(feature = "injection")]
+pub mod launching;
+
+#[cfg(feature = "injection")]
+pub mod injecting;
