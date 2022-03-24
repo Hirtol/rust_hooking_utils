@@ -1,4 +1,4 @@
-mod process;
+pub mod process;
 
 /// Can patch code in memory, so long as the pointers given are from the same memory space.
 pub struct LocalPatcher {
