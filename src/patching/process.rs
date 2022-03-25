@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
-use std::path::{Path, PathBuf};
-use std::{ffi::OsString, io, mem, os::windows::ffi::OsStringExt};
+use std::path::{PathBuf};
+use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt};
 
 use anyhow::anyhow;
 use thiserror::Error;
@@ -9,9 +9,7 @@ use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcess
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE, TH32CS_SNAPMODULE32,
 };
-use windows::Win32::System::ProcessStatus::{
-    K32EnumProcessModulesEx, LIST_MODULES_ALL, MODULEINFO,
-};
+
 
 pub type Result<T> = std::result::Result<T, ProcessErrorKind>;
 
