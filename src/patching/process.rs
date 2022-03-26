@@ -1,5 +1,5 @@
 use std::ops::{Deref, DerefMut};
-use std::path::{PathBuf};
+use std::path::PathBuf;
 use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt};
 
 use anyhow::anyhow;
@@ -9,7 +9,6 @@ use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcess
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE, TH32CS_SNAPMODULE32,
 };
-
 
 pub type Result<T> = std::result::Result<T, ProcessErrorKind>;
 
@@ -106,7 +105,7 @@ impl GameProcess {
     }
 
     /// Get all modules from the process
-    pub fn get_modules(&self) -> Result<Vec<Module>> {
+    pub fn get_modules(&self) -> Result<Vec<ModuleData>> {
         let module: HANDLE = unsafe {
             CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, self.pid)
                 .ok()
@@ -119,7 +118,7 @@ impl GameProcess {
         let mut result = vec![];
 
         while let Ok(()) = unsafe { Module32NextW(module, &mut entry).ok() } {
-            match Module::new(*self, entry) {
+            match ModuleData::new(*self, entry) {
                 Ok(module) => result.push(module),
                 Err(err) => log::debug!("Failed module initialization: {}", err),
             }
@@ -131,7 +130,7 @@ impl GameProcess {
     }
 
     /// Get the module with the given name from the process
-    pub fn get_module(&self, module_name: &str) -> Result<Module> {
+    pub fn get_module(&self, module_name: &str) -> Result<ModuleData> {
         let modules = self.get_modules()?;
 
         for module in modules {
@@ -161,13 +160,13 @@ impl GameProcess {
 }
 
 #[derive(Debug, Clone)]
-pub struct Module {
+pub struct ModuleData {
     pub parent: GameProcess,
     pub entry: MODULEENTRY32W,
     name: String,
 }
 
-impl Module {
+impl ModuleData {
     /// Create a new module from the given handle and module entry
     ///
     /// The `parent_handle` should refer to the owning process.
@@ -176,7 +175,7 @@ impl Module {
             .into_string()
             .map_err(|e| anyhow!("Failed to convert name: {:?}", e))?;
 
-        Ok(Module {
+        Ok(ModuleData {
             entry,
             parent,
             name,
@@ -221,7 +220,7 @@ impl Module {
     }
 }
 
-impl Module {
+impl ModuleData {
     /// Read relative to this module's base address
     ///
     /// # Safety
@@ -282,10 +281,10 @@ impl Module {
 /// [this from Guided Hacking](https://guidedhacking.com/threads/external-internal-pattern-scanning-guide.14112/)
 ///
 #[repr(transparent)]
-pub struct LocalModule(Module);
+pub struct LocalModule(ModuleData);
 
 impl LocalModule {
-    pub fn new(module: Module) -> anyhow::Result<Self> {
+    pub fn new(module: ModuleData) -> anyhow::Result<Self> {
         Self::try_from(module)
     }
 
@@ -339,10 +338,10 @@ impl LocalModule {
     }
 }
 
-impl TryFrom<Module> for LocalModule {
+impl TryFrom<ModuleData> for LocalModule {
     type Error = anyhow::Error;
 
-    fn try_from(module: Module) -> std::result::Result<Self, Self::Error> {
+    fn try_from(module: ModuleData) -> std::result::Result<Self, Self::Error> {
         if module.is_local() {
             Ok(Self(module))
         } else {
@@ -352,7 +351,7 @@ impl TryFrom<Module> for LocalModule {
 }
 
 impl Deref for LocalModule {
-    type Target = Module;
+    type Target = ModuleData;
 
     fn deref(&self) -> &Self::Target {
         &self.0

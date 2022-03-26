@@ -1,3 +1,8 @@
+//! Contains a pre-made proxy for dinput8.dll
+//!
+//! Enabling the respective feature, (e.g. `proxy-dinput8`) will automatically export the pre-requisite functions if the
+//! parent crate is compiled as a `crate-type = ["cdylib"]`.
+
 use std::ffi::c_void;
 
 use libloading::os::windows::Symbol;
@@ -5,7 +10,7 @@ use once_cell::sync::Lazy;
 use windows::core::{GUID, HRESULT};
 use windows::Win32::Foundation::HINSTANCE;
 
-use crate::proxy::get_system_directory;
+use crate::get_system_directory;
 
 pub type DINPUT8CREATE = unsafe extern "system" fn(
     HINSTANCE,

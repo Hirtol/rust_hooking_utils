@@ -7,8 +7,9 @@ edition = "2021"
 default = ["launching", "patching"]
 launching = ["dll-syringe"]
 patching = []
-proxy = ["libloading"]
-proxy-dinput8 = ["proxy"]
+dinput8 = ["proxy-dinput8", "hooking-dinput8"]
+hooking-dinput8 = ["windows/Win32_Devices_HumanInterfaceDevice", "windows/Win32_System_LibraryLoader"]
+proxy-dinput8 = ["libloading"]
 
 [dependencies]
 anyhow = "1.0.56"
