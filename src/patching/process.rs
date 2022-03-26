@@ -7,7 +7,8 @@ use thiserror::Error;
 use windows::Win32::Foundation::{CloseHandle, HANDLE, HINSTANCE};
 use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory};
 use windows::Win32::System::Diagnostics::ToolHelp::{
-    CreateToolhelp32Snapshot, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE, TH32CS_SNAPMODULE32,
+    CreateToolhelp32Snapshot, Module32FirstW, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE,
+    TH32CS_SNAPMODULE32,
 };
 
 pub type Result<T> = std::result::Result<T, ProcessErrorKind>;
@@ -105,7 +106,7 @@ impl GameProcess {
     }
 
     /// Get all modules from the process
-    pub fn get_modules(&self) -> Result<Vec<ModuleData>> {
+    pub fn get_modules(&self) -> Result<Vec<Module>> {
         let module: HANDLE = unsafe {
             CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, self.pid)
                 .ok()
@@ -118,7 +119,7 @@ impl GameProcess {
         let mut result = vec![];
 
         while let Ok(()) = unsafe { Module32NextW(module, &mut entry).ok() } {
-            match ModuleData::new(*self, entry) {
+            match Module::new(*self, entry) {
                 Ok(module) => result.push(module),
                 Err(err) => log::debug!("Failed module initialization: {}", err),
             }
@@ -130,7 +131,7 @@ impl GameProcess {
     }
 
     /// Get the module with the given name from the process
-    pub fn get_module(&self, module_name: &str) -> Result<ModuleData> {
+    pub fn get_module(&self, module_name: &str) -> Result<Module> {
         let modules = self.get_modules()?;
 
         for module in modules {
@@ -157,16 +158,38 @@ impl GameProcess {
 
         Err(ProcessErrorKind::UnknownModule(module_name.into()))
     }
+
+    /// Get the base module of this process.
+    pub fn get_base_module(&self) -> Result<Module> {
+        let snapshot: HANDLE = unsafe {
+            CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, self.pid)
+                .ok()
+                .map_err(|_| ProcessErrorKind::InvalidHandleValue)?
+        };
+
+        let mut entry = MODULEENTRY32W::default();
+
+        entry.dwSize = mem::size_of::<MODULEENTRY32W>() as u32;
+
+        unsafe { Module32FirstW(snapshot, &mut entry).ok()? };
+
+        let final_module = Module::new(*self, entry)?;
+
+        // Cleanup handle
+        unsafe { CloseHandle(snapshot).ok()? };
+
+        Ok(final_module)
+    }
 }
 
 #[derive(Debug, Clone)]
-pub struct ModuleData {
+pub struct Module {
     pub parent: GameProcess,
     pub entry: MODULEENTRY32W,
     name: String,
 }
 
-impl ModuleData {
+impl Module {
     /// Create a new module from the given handle and module entry
     ///
     /// The `parent_handle` should refer to the owning process.
@@ -175,7 +198,7 @@ impl ModuleData {
             .into_string()
             .map_err(|e| anyhow!("Failed to convert name: {:?}", e))?;
 
-        Ok(ModuleData {
+        Ok(Module {
             entry,
             parent,
             name,
@@ -220,7 +243,7 @@ impl ModuleData {
     }
 }
 
-impl ModuleData {
+impl Module {
     /// Read relative to this module's base address
     ///
     /// # Safety
@@ -281,10 +304,10 @@ impl ModuleData {
 /// [this from Guided Hacking](https://guidedhacking.com/threads/external-internal-pattern-scanning-guide.14112/)
 ///
 #[repr(transparent)]
-pub struct LocalModule(ModuleData);
+pub struct LocalModule(Module);
 
 impl LocalModule {
-    pub fn new(module: ModuleData) -> anyhow::Result<Self> {
+    pub fn new(module: Module) -> anyhow::Result<Self> {
         Self::try_from(module)
     }
 
@@ -338,10 +361,10 @@ impl LocalModule {
     }
 }
 
-impl TryFrom<ModuleData> for LocalModule {
+impl TryFrom<Module> for LocalModule {
     type Error = anyhow::Error;
 
-    fn try_from(module: ModuleData) -> std::result::Result<Self, Self::Error> {
+    fn try_from(module: Module) -> std::result::Result<Self, Self::Error> {
         if module.is_local() {
             Ok(Self(module))
         } else {
@@ -351,7 +374,7 @@ impl TryFrom<ModuleData> for LocalModule {
 }
 
 impl Deref for LocalModule {
-    type Target = ModuleData;
+    type Target = Module;
 
     fn deref(&self) -> &Self::Target {
         &self.0

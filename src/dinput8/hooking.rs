@@ -1,7 +1,8 @@
 //! Helpers to create and manage DirectInput8 hooks.
 
 use anyhow::Context;
-use windows::core::Interface;
+use std::ffi::c_void;
+use windows::core::{Interface, HRESULT};
 use windows::Win32::Devices::HumanInterfaceDevice::{
     GUID_SysKeyboard, GUID_SysMouse, IDirectInput8W, IDirectInputDevice8W,
     IDirectInputDevice8W_Vtbl, DI8DEVCLASS_ALL, DI8DEVCLASS_KEYBOARD, DIDEVICEINSTANCEW,
@@ -9,13 +10,23 @@ use windows::Win32::Devices::HumanInterfaceDevice::{
 };
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 
+pub type GetDeviceDataFn = extern "system" fn(
+    *mut IDirectInputDevice8W,
+    u32,
+    *mut DIDEVICEOBJECTDATA,
+    *mut u32,
+    u32,
+) -> HRESULT;
+pub type GetDeviceStateFn =
+    extern "system" fn(*mut IDirectInputDevice8W, u32, *mut c_void) -> HRESULT;
+
 #[derive(Debug)]
 pub enum DeviceType {
     Keyboard,
     Mouse,
 }
 
-/// Create a [IDirectInput8W]
+/// Create a `IDirectInput8W`
 ///
 /// In case the `proxy-dinput8` feature is enabled this will instead opt to call our proxy to call the function
 ///
@@ -55,7 +66,7 @@ pub fn get_dinput_interface() -> anyhow::Result<IDirectInput8W> {
     direct_input.ok_or_else(|| anyhow::anyhow!("Failed to create DirectInput8"))
 }
 
-/// Create a [IDirectInputDevice8W].
+/// Create a `IDirectInputDevice8W`
 ///
 /// For acquiring a `direct_input` instance refer to [get_dinput_interface].
 ///
