@@ -109,7 +109,6 @@ impl GameProcess {
     pub fn get_modules(&self) -> Result<Vec<Module>> {
         let module: HANDLE = unsafe {
             CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, self.pid)
-                .ok()
                 .map_err(|_| ProcessErrorKind::InvalidHandleValue)?
         };
 
@@ -163,7 +162,6 @@ impl GameProcess {
     pub fn get_base_module(&self) -> Result<Module> {
         let snapshot: HANDLE = unsafe {
             CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, self.pid)
-                .ok()
                 .map_err(|_| ProcessErrorKind::InvalidHandleValue)?
         };
 

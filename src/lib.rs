@@ -18,6 +18,8 @@ pub mod patching;
 
 pub mod dinput8;
 
+pub mod raw_input;
+
 /// Retrieves the system directory of the current user.
 ///
 /// Here 'pristine' `DLL`s can be found and loaded for proxying.

@@ -32,7 +32,7 @@ pub enum DeviceType {
 ///
 /// [MDSN Docs](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ee417799(v=vs.85))
 pub fn get_dinput_interface() -> anyhow::Result<IDirectInput8W> {
-    let executor_module = unsafe { GetModuleHandleW(None) };
+    let executor_module = unsafe { GetModuleHandleW(None)? };
 
     let mut direct_input: Option<IDirectInput8W> = None;
 
