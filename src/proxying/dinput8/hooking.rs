@@ -52,7 +52,7 @@ pub fn get_dinput_interface() -> anyhow::Result<IDirectInput8W> {
     unsafe {
         // We don't use windows::Win32::Devices::HumanInterfaceDevice::DirectInput8Create because it creates link
         // errors due to the duplicate definition of our own DirectInput8Create in `dinput8.rs`
-        crate::dinput8::proxy::DirectInput8Create(
+        crate::proxying::dinput8::proxy::DirectInput8Create(
             executor_module,
             DIRECTINPUT_VERSION,
             &IDirectInput8W::IID,

@@ -10,13 +10,13 @@ use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use std::path::PathBuf;
 
+pub mod proxying;
+
 #[cfg(feature = "launching")]
 pub mod launching;
 
 #[cfg(feature = "patching")]
 pub mod patching;
-
-pub mod dinput8;
 
 pub mod raw_input;
 
