@@ -30,7 +30,7 @@ pub static DINPUT_MANAGER: Lazy<DirectInputProxyManager> =
     Lazy::new(|| DirectInputProxyManager::new().expect("Failed to initialize DirectInput"));
 
 pub struct DirectInputProxyManager {
-    lib: libloading::Library,
+    _lib: libloading::Library,
     direct_input_8_create: Symbol<DINPUT8CREATE>,
     dll_can_unload_now: Symbol<DLLCANUNLOADNOW>,
     dll_get_class_object: Symbol<DLLGETCLASSOBJECT>,
@@ -60,7 +60,7 @@ impl DirectInputProxyManager {
                 dll_unregister_server: lib
                     .get::<DLLUNREGISTERSERVER>(b"DllUnregisterServer")?
                     .into_raw(),
-                lib,
+                _lib: lib,
             })
         }
     }
