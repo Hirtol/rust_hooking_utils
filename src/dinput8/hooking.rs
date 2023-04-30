@@ -1,12 +1,12 @@
 //! Helpers to create and manage DirectInput8 hooks.
 
-use anyhow::Context;
 use std::ffi::c_void;
-use windows::core::{Interface, HRESULT};
+
+use anyhow::Context;
+use windows::core::{ComInterface, HRESULT};
 use windows::Win32::Devices::HumanInterfaceDevice::{
-    GUID_SysKeyboard, GUID_SysMouse, IDirectInput8W, IDirectInputDevice8W,
-    IDirectInputDevice8W_Vtbl, DI8DEVCLASS_ALL, DI8DEVCLASS_KEYBOARD, DIDEVICEINSTANCEW,
-    DIDEVICEOBJECTDATA, DIEDFL_ATTACHEDONLY, DIK_P, DIK_W, DIRECTINPUT_VERSION,
+    GUID_SysKeyboard, GUID_SysMouse, IDirectInput8W, IDirectInputDevice8W, DIDEVICEOBJECTDATA,
+    DIRECTINPUT_VERSION,
 };
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 

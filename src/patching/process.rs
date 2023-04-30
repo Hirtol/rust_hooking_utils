@@ -4,7 +4,7 @@ use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt};
 
 use anyhow::anyhow;
 use thiserror::Error;
-use windows::Win32::Foundation::{CloseHandle, HANDLE, HINSTANCE};
+use windows::Win32::Foundation::{CloseHandle, HANDLE, HMODULE};
 use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Module32FirstW, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE,
@@ -70,7 +70,7 @@ impl GameProcess {
             ptr as *const _,
             buffer.as_mut_ptr() as *mut _,
             buffer.len(),
-            &mut amount_read as *mut _,
+            Some(&mut amount_read as *mut _),
         )
         .ok()?;
 
@@ -94,7 +94,7 @@ impl GameProcess {
             ptr as *const _,
             buffer.as_ptr() as *const _,
             buffer.len(),
-            &mut amount_read as *mut _,
+            Some(&mut amount_read as *mut _),
         )
         .ok()?;
 
@@ -228,7 +228,7 @@ impl Module {
     }
 
     /// Returns the handle to this module
-    pub fn module_handle(&self) -> HINSTANCE {
+    pub fn module_handle(&self) -> HMODULE {
         self.entry.hModule
     }
 

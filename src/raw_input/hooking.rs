@@ -1,4 +1,4 @@
-use detour::static_detour;
+use retour::static_detour;
 use std::ffi::c_void;
 use windows::core::HRESULT;
 use windows::Win32::Foundation::HWND;

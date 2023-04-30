@@ -3,6 +3,7 @@ use std::path::Path;
 
 use anyhow::Context;
 use dll_syringe::process::OwnedProcess;
+use windows::core::{HSTRING, PWSTR};
 pub use windows::Win32::System::Threading;
 use windows::Win32::System::Threading::{PROCESS_INFORMATION, STARTUPINFOW};
 
@@ -27,17 +28,19 @@ pub fn launch_process(
 
     let startup_info = STARTUPINFOW::default();
     let mut process_info = PROCESS_INFORMATION::default();
+    let exe_path = HSTRING::from(exe_path);
+    let working_dir = HSTRING::from(working_dir);
 
     unsafe {
         Threading::CreateProcessW(
-            exe_path.as_os_str(),
-            Default::default(),
-            std::ptr::null(),
-            std::ptr::null(),
+            &exe_path,
+            PWSTR::null(),
+            None,
+            None,
             false,
             Threading::CREATE_UNICODE_ENVIRONMENT,
-            env.as_ptr() as *const _,
-            working_dir.as_os_str(),
+            Some(env.as_ptr() as *const _),
+            &working_dir,
             &startup_info,
             &mut process_info,
         )

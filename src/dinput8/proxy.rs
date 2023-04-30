@@ -8,12 +8,12 @@ use std::ffi::c_void;
 use libloading::os::windows::Symbol;
 use once_cell::sync::Lazy;
 use windows::core::{GUID, HRESULT};
-use windows::Win32::Foundation::HINSTANCE;
+use windows::Win32::Foundation::HMODULE;
 
 use crate::get_system_directory;
 
 pub type DINPUT8CREATE = unsafe extern "system" fn(
-    HINSTANCE,
+    HMODULE,
     u32,
     *const GUID,
     *mut *mut c_void,
@@ -68,7 +68,7 @@ impl DirectInputProxyManager {
 
 #[no_mangle]
 pub unsafe extern "system" fn DirectInput8Create(
-    h_inst: HINSTANCE,
+    h_inst: HMODULE,
     dw_version: u32,
     rii_dltf: *const GUID,
     ppv_out: *mut *mut c_void,
