@@ -9,12 +9,12 @@ pub mod dinput8;
 ///
 /// # Example
 /// ```norun
-/// fn attach() -> anyhow::Result<()> {
+/// fn attach(hinst_dll: windows::Win32::Foundation::HMODULE) -> anyhow::Result<()> {
 ///     println!("Hello World!");
 ///     Ok(())
 /// }
 ///
-/// fn detach() -> anyhow::Result<()> {
+/// fn detach(hinst_dll: windows::Win32::Foundation::HMODULE) -> anyhow::Result<()> {
 ///     println!("Goodbye World!");
 ///     Ok(())
 /// }
@@ -36,7 +36,7 @@ macro_rules! dll_main {
                     windows::Win32::System::LibraryLoader::DisableThreadLibraryCalls(hinst_dll);
 
                     if let Err(e) = std::panic::catch_unwind(|| {
-                        std::thread::spawn(move || match $attach() {
+                        std::thread::spawn(move || match $attach(hinst_dll) {
                             Ok(_) => {}
                             Err(e) => eprintln!("`dll_attach` returned an Err: {:#?}", e),
                         })
@@ -49,7 +49,7 @@ macro_rules! dll_main {
                 windows::Win32::System::SystemServices::DLL_PROCESS_DETACH => {
                     // lpv_reserved is null, then we're still in a consistent state and we can clean up safely.
                     if lpv_reserved.is_null() {
-                        match std::panic::catch_unwind(|| $detach()) {
+                        match std::panic::catch_unwind(|| $detach(hinst_dll)) {
                             Err(e) => {
                                 eprintln!("`dll_detach` has panicked: {:#?}", e);
                             }

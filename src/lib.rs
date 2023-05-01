@@ -2,13 +2,16 @@
 
 #![cfg_attr(doc_cfg, feature(doc_auto_cfg))]
 
-#[cfg(feature = "launching")]
-pub use dll_syringe;
-pub use patternscan;
-pub use retour;
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use std::path::PathBuf;
+
+#[cfg(feature = "launching")]
+pub use dll_syringe;
+
+pub use patternscan;
+pub use retour;
+use windows::Win32::System::LibraryLoader::GetModuleFileNameW;
 
 pub mod proxying;
 
@@ -40,5 +43,18 @@ pub fn get_system_directory() -> anyhow::Result<PathBuf> {
         Ok(PathBuf::from(OsString::from_wide(
             &buffer[..written_bytes as usize],
         )))
+    }
+}
+
+/// Retrieves the path to the given DLL module.
+pub fn get_current_dll_path(
+    hinst_dll: windows::Win32::Foundation::HMODULE,
+) -> anyhow::Result<PathBuf> {
+    let mut file_path = [0; 512];
+
+    unsafe {
+        let path_len = GetModuleFileNameW(hinst_dll, &mut file_path) as usize;
+        let path = String::from_utf16(&file_path[0..path_len])?;
+        Ok(path.into())
     }
 }
