@@ -55,6 +55,13 @@ impl LocalPatcher {
         std::slice::from_raw_parts(local_ptr, length)
     }
 
+    /// Read an arbitrary value from memory
+    ///
+    /// The `local_ptr` should be valid within the current memory space.
+    pub unsafe fn read<T>(&self, local_ptr: *const T) -> &T {
+        &*local_ptr
+    }
+
     /// Writes the given `bytes` to the given `local_ptr`.
     ///
     /// Saves the original bytes at `local_ptr` so that they can be restored later.
