@@ -44,6 +44,17 @@ impl LocalPatcher {
         let _ = VirtualProtect(local_ptr as _, len, old, &mut old);
     }
 
+    /// Reads the given `length` of bytes from the given `local_ptr`.
+    ///
+    /// The `local_ptr` should be valid within the current memory space.
+    ///
+    /// # Safety
+    ///
+    /// `local_ptr` must be valid within the current memory space.
+    pub unsafe fn safe_read_slice(&self, local_ptr: *const u8, length: usize) -> &[u8] {
+        std::slice::from_raw_parts(local_ptr, length)
+    }
+
     /// Writes the given `bytes` to the given `local_ptr`.
     ///
     /// Saves the original bytes at `local_ptr` so that they can be restored later.
