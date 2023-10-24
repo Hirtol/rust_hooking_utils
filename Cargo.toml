@@ -38,6 +38,7 @@ features = [
     "Win32_System_SystemInformation",
     "Win32_Devices_HumanInterfaceDevice",
     "Win32_System_ProcessStatus",
+    "Win32_UI_Input_KeyboardAndMouse",
     "Win32_System_Memory"
 ]
 
