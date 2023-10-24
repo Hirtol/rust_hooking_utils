@@ -71,8 +71,7 @@ impl GameProcess {
             buffer.as_mut_ptr() as *mut _,
             buffer.len(),
             Some(&mut amount_read as *mut _),
-        )
-        .ok()?;
+        )?;
 
         if amount_read != 0 {
             Ok(amount_read)
@@ -95,8 +94,7 @@ impl GameProcess {
             buffer.as_ptr() as *const _,
             buffer.len(),
             Some(&mut amount_read as *mut _),
-        )
-        .ok()?;
+        )?;
 
         if amount_read != buffer.len() {
             Err(ProcessErrorKind::MemoryWrite(ptr as usize))
@@ -117,14 +115,14 @@ impl GameProcess {
         entry.dwSize = mem::size_of::<MODULEENTRY32W>() as u32;
         let mut result = vec![];
 
-        while let Ok(()) = unsafe { Module32NextW(module, &mut entry).ok() } {
+        while let Ok(()) = unsafe { Module32NextW(module, &mut entry) } {
             match Module::new(*self, entry) {
                 Ok(module) => result.push(module),
                 Err(err) => log::debug!("Failed module initialization: {}", err),
             }
         }
         // Cleanup handle
-        unsafe { CloseHandle(module).ok()? };
+        unsafe { CloseHandle(module)? };
 
         Ok(result)
     }
@@ -169,12 +167,12 @@ impl GameProcess {
 
         entry.dwSize = mem::size_of::<MODULEENTRY32W>() as u32;
 
-        unsafe { Module32FirstW(snapshot, &mut entry).ok()? };
+        unsafe { Module32FirstW(snapshot, &mut entry)? };
 
         let final_module = Module::new(*self, entry)?;
 
         // Cleanup handle
-        unsafe { CloseHandle(snapshot).ok()? };
+        unsafe { CloseHandle(snapshot)? };
 
         Ok(final_module)
     }
