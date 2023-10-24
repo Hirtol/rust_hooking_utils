@@ -33,7 +33,8 @@ macro_rules! dll_main {
             match fdw_reason {
                 windows::Win32::System::SystemServices::DLL_PROCESS_ATTACH => {
                     // start loading
-                    windows::Win32::System::LibraryLoader::DisableThreadLibraryCalls(hinst_dll);
+                    let _ =
+                        windows::Win32::System::LibraryLoader::DisableThreadLibraryCalls(hinst_dll);
 
                     if let Err(e) = std::panic::catch_unwind(|| {
                         std::thread::spawn(move || match $attach(hinst_dll) {
