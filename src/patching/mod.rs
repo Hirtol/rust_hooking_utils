@@ -29,7 +29,7 @@ impl LocalPatcher {
     ///
     /// `local_ptr` must be valid within the current memory space.
     /// The caller should also have the rights to `VirtualProtect` the memory at `local_ptr`.
-    pub unsafe fn safe_write(&self, local_ptr: *mut u8, bytes: &[u8]) {
+    pub unsafe fn safe_write<T>(&self, local_ptr: *mut T, bytes: &[u8]) {
         use windows::Win32::System::Memory::{
             VirtualProtect, PAGE_EXECUTE_READWRITE, PAGE_PROTECTION_FLAGS,
         };
@@ -39,7 +39,7 @@ impl LocalPatcher {
 
         let _ = VirtualProtect(local_ptr as _, len, PAGE_EXECUTE_READWRITE, &mut old);
 
-        std::slice::from_raw_parts_mut(local_ptr, len).copy_from_slice(bytes);
+        std::slice::from_raw_parts_mut(local_ptr as *mut u8, len).copy_from_slice(bytes);
 
         let _ = VirtualProtect(local_ptr as _, len, old, &mut old);
     }
@@ -51,8 +51,8 @@ impl LocalPatcher {
     /// # Safety
     ///
     /// `local_ptr` must be valid within the current memory space.
-    pub unsafe fn safe_read_slice(&self, local_ptr: *const u8, length: usize) -> &[u8] {
-        std::slice::from_raw_parts(local_ptr, length)
+    pub unsafe fn safe_read_slice<T>(&self, local_ptr: *const T, length: usize) -> &[u8] {
+        std::slice::from_raw_parts(local_ptr as *const u8, length)
     }
 
     /// Read an arbitrary value from memory
@@ -60,6 +60,13 @@ impl LocalPatcher {
     /// The `local_ptr` should be valid within the current memory space.
     pub unsafe fn read<T>(&self, local_ptr: *const T) -> &T {
         &*local_ptr
+    }
+
+    /// Write an arbitrary value from memory
+    ///
+    /// The `local_ptr` should be valid within the current memory space.
+    pub unsafe fn write<T>(&self, local_ptr: *mut T, value: T) {
+        *local_ptr = value
     }
 
     /// Writes the given `bytes` to the given `local_ptr`.
