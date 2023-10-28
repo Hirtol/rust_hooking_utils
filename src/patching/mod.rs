@@ -89,17 +89,21 @@ impl LocalPatcher {
     ///
     /// Saves the original bytes at `local_ptr` so that they can be restored later.
     ///
+    /// If `enabled = false` then one has to first run `enable_all_patches()`.
+    ///
     /// # Safety
     ///
     /// See [`safe_write`](#method.safe_write).
-    pub unsafe fn patch(&mut self, local_ptr: *mut u8, bytes: &[u8]) {
+    pub unsafe fn patch(&mut self, local_ptr: *mut u8, bytes: &[u8], enabled: bool) {
         self.patches.push(Patch {
             address: local_ptr,
             patch_bytes: bytes.into(),
             original_bytes: std::slice::from_raw_parts(local_ptr, bytes.len()).into(),
         });
 
-        self.safe_write(local_ptr, bytes)
+        if enabled {
+            self.safe_write(local_ptr, bytes)
+        }
     }
 
     /// Removes a patch which was applied to the specified address.
@@ -134,8 +138,6 @@ impl LocalPatcher {
     }
 
     /// Re-Enable all patches in the Patch list.
-    ///
-    /// Only relevant if `disable_all_patches()` was called.
     pub unsafe fn enable_all_patches(&self) {
         for patch in self.patches.iter().rev() {
             unsafe {
