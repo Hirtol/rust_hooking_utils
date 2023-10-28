@@ -7,12 +7,17 @@ pub struct LocalPatcher {
 
 struct Patch {
     address: *mut u8,
+    patch_bytes: Box<[u8]>,
     original_bytes: Box<[u8]>,
 }
 
 impl Patch {
     fn original_bytes(&self) -> &[u8] {
         &*self.original_bytes
+    }
+
+    fn patch_bytes(&self) -> &[u8] {
+        &*self.patch_bytes
     }
 }
 
@@ -86,6 +91,7 @@ impl LocalPatcher {
     pub unsafe fn patch(&mut self, local_ptr: *mut u8, bytes: &[u8]) {
         self.patches.push(Patch {
             address: local_ptr,
+            patch_bytes: bytes.into(),
             original_bytes: std::slice::from_raw_parts(local_ptr, bytes.len()).into(),
         });
 
@@ -105,6 +111,32 @@ impl LocalPatcher {
             let patch = self.patches.swap_remove(index);
 
             self.safe_write(patch.address, patch.original_bytes());
+        }
+    }
+
+    pub fn patches(&self) -> &[Patch] {
+        &self.patches
+    }
+
+    /// Disable all current patches.
+    ///
+    /// They can be re-enabled with [Self::enable_all_patches].
+    pub unsafe fn disable_all_patches(&self) {
+        for patch in self.patches.iter().rev() {
+            unsafe {
+                self.safe_write(patch.address, patch.original_bytes());
+            }
+        }
+    }
+
+    /// Re-Enable all patches in the Patch list.
+    ///
+    /// Only relevant if `disable_all_patches()` was called.
+    pub unsafe fn enable_all_patches(&self) {
+        for patch in self.patches.iter().rev() {
+            unsafe {
+                self.safe_write(patch.address, patch.patch_bytes());
+            }
         }
     }
 }
