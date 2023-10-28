@@ -84,10 +84,27 @@ impl LocalPatcher {
 
         self.safe_write(local_ptr, bytes)
     }
+
+    /// Removes a patch which was applied to the specified address.
+    ///
+    /// Re-applies the original bytes.
+    pub unsafe fn unpatch(&mut self, local_ptr: *mut u8) {
+        if let Some(index) = self
+            .patches
+            .iter()
+            .rev()
+            .position(|value| value.address == local_ptr)
+        {
+            let patch = self.patches.swap_remove(index);
+
+            self.safe_write(patch.address, patch.original_bytes());
+        }
+    }
 }
 
 impl Drop for LocalPatcher {
     fn drop(&mut self) {
+        // Patch order is important, which is why we're using a Vec instead of a HashMap
         for patch in self.patches.iter().rev() {
             unsafe {
                 self.safe_write(patch.address, patch.original_bytes());
