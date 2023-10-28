@@ -5,10 +5,10 @@ pub struct LocalPatcher {
     patches: Vec<Patch>,
 }
 
-struct Patch {
-    address: *mut u8,
-    patch_bytes: Box<[u8]>,
-    original_bytes: Box<[u8]>,
+pub struct Patch {
+    pub address: *mut u8,
+    pub patch_bytes: Box<[u8]>,
+    pub original_bytes: Box<[u8]>,
 }
 
 impl Patch {
