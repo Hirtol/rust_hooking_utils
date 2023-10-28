@@ -62,6 +62,13 @@ impl LocalPatcher {
         &*local_ptr
     }
 
+    /// Read an arbitrary value from memory
+    ///
+    /// The `local_ptr` should be valid within the current memory space.
+    pub unsafe fn mut_read<T>(&self, local_ptr: *mut T) -> &mut T {
+        &mut *local_ptr
+    }
+
     /// Write an arbitrary value from memory
     ///
     /// The `local_ptr` should be valid within the current memory space.
