@@ -56,21 +56,25 @@ impl LocalPatcher {
     /// # Safety
     ///
     /// `local_ptr` must be valid within the current memory space.
-    pub unsafe fn safe_read_slice<T>(&self, local_ptr: *const T, length: usize) -> &[u8] {
+    pub unsafe fn safe_read_slice<'a, 'b, T>(
+        &'a self,
+        local_ptr: *const T,
+        length: usize,
+    ) -> &'b [u8] {
         std::slice::from_raw_parts(local_ptr as *const u8, length)
     }
 
     /// Read an arbitrary value from memory
     ///
     /// The `local_ptr` should be valid within the current memory space.
-    pub unsafe fn read<T>(&self, local_ptr: *const T) -> &T {
+    pub unsafe fn read<'a, 'b, T>(&'a self, local_ptr: *const T) -> &'b T {
         &*local_ptr
     }
 
     /// Read an arbitrary value from memory
     ///
     /// The `local_ptr` should be valid within the current memory space.
-    pub unsafe fn mut_read<T>(&self, local_ptr: *mut T) -> &mut T {
+    pub unsafe fn mut_read<'a, 'b, T>(&'a self, local_ptr: *mut T) -> &'b mut T {
         &mut *local_ptr
     }
 
