@@ -35,6 +35,13 @@ impl KeyboardManager {
         self.keys = self.next_frame;
     }
 
+    /// Check if the given key is either [KeyState::Pressed] or [KeyState::Down]
+    pub fn has_pressed(&mut self, key: VIRTUAL_KEY) -> bool {
+        let state = self.get_key_state(key);
+
+        state == KeyState::Pressed || state == KeyState::Down
+    }
+
     /// Returns `true` if all given `keys` are either [KeyState::Down] or [KeyState::Pressed], with at least *one* [
     pub fn all_pressed(&mut self, keys: impl Iterator<Item = VIRTUAL_KEY>) -> bool {
         let states = keys.map(|key| self.get_key_state(key)).collect::<Vec<_>>();
