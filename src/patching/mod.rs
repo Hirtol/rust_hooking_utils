@@ -139,7 +139,7 @@ impl LocalPatcher {
 
     /// Re-Enable all patches in the Patch list.
     pub unsafe fn enable_all_patches(&self) {
-        for patch in self.patches.iter().rev() {
+        for patch in self.patches.iter() {
             unsafe {
                 self.safe_write(patch.address, patch.patch_bytes());
             }
