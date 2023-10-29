@@ -126,6 +126,12 @@ impl LocalPatcher {
         &self.patches
     }
 
+    pub unsafe fn disable_patch(&self, local_ptr: *mut u8) {
+        if let Some(patch) = self.patches.iter().rev().find(|p| p.address == local_ptr) {
+            self.safe_write(patch.address, patch.original_bytes());
+        }
+    }
+
     /// Disable all current patches.
     ///
     /// They can be re-enabled with [Self::enable_all_patches].
@@ -134,6 +140,12 @@ impl LocalPatcher {
             unsafe {
                 self.safe_write(patch.address, patch.original_bytes());
             }
+        }
+    }
+
+    pub unsafe fn enable_patch(&self, local_ptr: *mut u8) {
+        if let Some(patch) = self.patches.iter().rev().find(|p| p.address == local_ptr) {
+            self.safe_write(patch.address, patch.patch_bytes());
         }
     }
 
