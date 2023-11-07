@@ -23,6 +23,7 @@ pub mod patching;
 
 pub mod raw_input;
 
+pub mod pointer;
 /// Retrieves the system directory of the current user.
 ///
 /// Here 'pristine' `DLL`s can be found and loaded for proxying.

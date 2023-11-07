@@ -24,6 +24,7 @@ patternscan = "1.2"
 dll-syringe = { version = "0.15", optional = true }
 libloading = { version = "0.8", optional = true }
 iced-x86 = { version = "1.20", optional = true }
+serde = { version = "1", features = ["derive"] }
 
 [dependencies.windows]
 version = "0.51"
