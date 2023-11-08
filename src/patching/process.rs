@@ -11,7 +11,7 @@ use windows::Win32::System::Diagnostics::ToolHelp::{
     TH32CS_SNAPMODULE32,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetWindow, GetWindowThreadProcessId, IsWindowVisible, GW_OWNER,
+    EnumWindows, GetWindow, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible, GW_OWNER,
 };
 
 pub type Result<T> = std::result::Result<T, ProcessErrorKind>;
@@ -181,7 +181,7 @@ impl GameProcess {
     }
 
     /// Get the main window of this process
-    pub fn get_main_window(&self) -> Result<HWND> {
+    pub fn get_main_window(&self) -> Result<Window> {
         struct HandleData {
             process_id: u32,
             window: HWND,
@@ -210,20 +210,21 @@ impl GameProcess {
         };
 
         unsafe {
-            EnumWindows(
+            // Explicitly ignore the result as this function returns an `Err` whenever we find the main function...
+            let _ = EnumWindows(
                 Some(enum_callback),
                 LPARAM((&mut data as *mut HandleData) as isize),
-            )?;
+            );
         }
 
-        Ok(data.window)
+        Ok(Window(data.window))
     }
 
     /// Return all windows associated with this process.
-    pub fn get_windows(&self) -> Result<Vec<HWND>> {
+    pub fn get_windows(&self) -> Result<Vec<Window>> {
         struct HandleData {
             process_id: u32,
-            windows: Vec<HWND>,
+            windows: Vec<Window>,
         }
 
         unsafe extern "system" fn enum_callback(handle: HWND, param: LPARAM) -> BOOL {
@@ -232,7 +233,7 @@ impl GameProcess {
             let _ = GetWindowThreadProcessId(handle, Some(&mut proc_id));
 
             if data.process_id == proc_id {
-                data.windows.push(handle)
+                data.windows.push(Window(handle))
             }
 
             true.into()
@@ -251,6 +252,25 @@ impl GameProcess {
         }
 
         Ok(data.windows)
+    }
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub struct Window(pub HWND);
+
+impl Window {
+    /// Return the current title of the window
+    ///
+    /// Will return a lossy `String` conversion.
+    pub fn title(&self) -> String {
+        self.title_os().to_string_lossy().into_owned()
+    }
+
+    /// Return the current title of the window
+    pub fn title_os(&self) -> OsString {
+        let mut text = [0; 256];
+        let len = unsafe { GetWindowTextW(self.0, &mut text) };
+        OsString::from_wide(&text[0..len as usize])
     }
 }
 
