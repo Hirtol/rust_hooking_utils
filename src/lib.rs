@@ -11,7 +11,10 @@ pub use dll_syringe;
 
 pub use patternscan;
 pub use retour;
-use windows::Win32::System::LibraryLoader::GetModuleFileNameW;
+use windows::Win32::Foundation::HMODULE;
+use windows::Win32::System::LibraryLoader::{
+    GetModuleFileNameW, GetModuleHandleExW, GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+};
 
 pub mod proxying;
 
@@ -58,4 +61,19 @@ pub fn get_current_dll_path(
         let path = String::from_utf16(&file_path[0..path_len])?;
         Ok(path.into())
     }
+}
+
+/// Retrieves the current module, if it exists.
+pub fn get_current_module() -> anyhow::Result<HMODULE> {
+    let mut result = HMODULE::default();
+
+    unsafe {
+        GetModuleHandleExW(
+            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            windows::core::w!("get_current_module"),
+            &mut result,
+        )?
+    }
+
+    Ok(result)
 }
