@@ -7,7 +7,7 @@ resolver = "2"
 [features]
 default = ["launching", "patching"]
 launching = ["dll-syringe"]
-patching = ["windows/Win32_System_LibraryLoader"]
+patching = ["windows/Win32_System_LibraryLoader", "windows/Win32_UI_WindowsAndMessaging"]
 dinput8 = ["proxy-dinput8", "hooking-dinput8"]
 hooking-dinput8 = ["windows/Win32_Devices_HumanInterfaceDevice", "windows/Win32_System_LibraryLoader"]
 proxy-dinput8 = ["libloading"]

@@ -4,11 +4,14 @@ use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt};
 
 use anyhow::anyhow;
 use thiserror::Error;
-use windows::Win32::Foundation::{CloseHandle, HANDLE, HMODULE};
+use windows::Win32::Foundation::{CloseHandle, BOOL, HANDLE, HMODULE, HWND, LPARAM};
 use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Module32FirstW, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE,
     TH32CS_SNAPMODULE32,
+};
+use windows::Win32::UI::WindowsAndMessaging::{
+    EnumWindows, GetWindow, GetWindowThreadProcessId, IsWindowVisible, GW_OWNER,
 };
 
 pub type Result<T> = std::result::Result<T, ProcessErrorKind>;
@@ -175,6 +178,79 @@ impl GameProcess {
         unsafe { CloseHandle(snapshot)? };
 
         Ok(final_module)
+    }
+
+    /// Get the main window of this process
+    pub fn get_main_window(&self) -> Result<HWND> {
+        struct HandleData {
+            process_id: u32,
+            window: HWND,
+        }
+
+        unsafe extern "system" fn enum_callback(handle: HWND, param: LPARAM) -> BOOL {
+            unsafe fn is_main_window(handle: HWND) -> bool {
+                GetWindow(handle, GW_OWNER).0 == 0 && IsWindowVisible(handle).as_bool()
+            }
+
+            let data = &mut *(param.0 as *mut HandleData);
+            let mut proc_id = 0;
+            let _ = GetWindowThreadProcessId(handle, Some(&mut proc_id));
+
+            if data.process_id != proc_id || !is_main_window(handle) {
+                true.into()
+            } else {
+                data.window = handle;
+                false.into()
+            }
+        }
+
+        let mut data = HandleData {
+            process_id: self.pid,
+            window: Default::default(),
+        };
+
+        unsafe {
+            EnumWindows(
+                Some(enum_callback),
+                LPARAM((&mut data as *mut HandleData) as isize),
+            )?;
+        }
+
+        Ok(data.window)
+    }
+
+    /// Return all windows associated with this process.
+    pub fn get_windows(&self) -> Result<Vec<HWND>> {
+        struct HandleData {
+            process_id: u32,
+            windows: Vec<HWND>,
+        }
+
+        unsafe extern "system" fn enum_callback(handle: HWND, param: LPARAM) -> BOOL {
+            let data = &mut *(param.0 as *mut HandleData);
+            let mut proc_id = 0;
+            let _ = GetWindowThreadProcessId(handle, Some(&mut proc_id));
+
+            if data.process_id == proc_id {
+                data.windows.push(handle)
+            }
+
+            true.into()
+        }
+
+        let mut data = HandleData {
+            process_id: self.pid,
+            windows: Default::default(),
+        };
+
+        unsafe {
+            EnumWindows(
+                Some(enum_callback),
+                LPARAM((&mut data as *mut HandleData) as isize),
+            )?;
+        }
+
+        Ok(data.windows)
     }
 }
 
