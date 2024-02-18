@@ -182,10 +182,13 @@ impl GameProcess {
     }
 
     /// Get the main window of this process
-    pub fn get_main_window(&self) -> Result<Window> {
+    ///
+    /// If no such window yet exists this will return [None]
+    pub fn get_main_window(&self) -> Option<Window> {
         struct HandleData {
             process_id: u32,
-            window: HWND,
+            console_window: Option<HWND>,
+            window: Option<HWND>,
         }
 
         unsafe extern "system" fn enum_callback(handle: HWND, param: LPARAM) -> BOOL {
@@ -197,17 +200,32 @@ impl GameProcess {
             let mut proc_id = 0;
             let _ = GetWindowThreadProcessId(handle, Some(&mut proc_id));
 
-            if data.process_id != proc_id || !is_main_window(handle) {
+            if data.process_id != proc_id
+                || data
+                    .console_window
+                    .as_ref()
+                    .map(|&w| w == handle)
+                    .unwrap_or_default()
+                || !is_main_window(handle)
+            {
                 true.into()
             } else {
-                data.window = handle;
+                data.window = Some(handle);
                 false.into()
             }
         }
 
         let mut data = HandleData {
             process_id: self.pid,
-            window: Default::default(),
+            console_window: unsafe {
+                let wnd = windows::Win32::System::Console::GetConsoleWindow();
+                if wnd.0 == 0 {
+                    None
+                } else {
+                    Some(wnd)
+                }
+            },
+            window: None,
         };
 
         unsafe {
@@ -218,7 +236,7 @@ impl GameProcess {
             );
         }
 
-        Ok(Window(data.window))
+        data.window.map(Window)
     }
 
     /// Return all windows associated with this process.
