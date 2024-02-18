@@ -11,7 +11,8 @@ use windows::Win32::System::Diagnostics::ToolHelp::{
     TH32CS_SNAPMODULE32,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetWindow, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible, GW_OWNER,
+    EnumWindows, GetForegroundWindow, GetWindow, GetWindowTextW, GetWindowThreadProcessId,
+    IsWindowVisible, GW_OWNER,
 };
 
 pub type Result<T> = std::result::Result<T, ProcessErrorKind>;
@@ -271,6 +272,11 @@ impl Window {
         let mut text = [0; 256];
         let len = unsafe { GetWindowTextW(self.0, &mut text) };
         OsString::from_wide(&text[0..len as usize])
+    }
+
+    /// Check whether this current window is on the foreground.
+    pub fn is_foreground_window(&self) -> bool {
+        unsafe { GetForegroundWindow() == self.0 }
     }
 }
 
