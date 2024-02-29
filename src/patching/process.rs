@@ -1,5 +1,6 @@
 use std::ops::{Deref, DerefMut};
 use std::path::PathBuf;
+use std::time::Duration;
 use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt};
 
 use anyhow::anyhow;
@@ -12,7 +13,7 @@ use windows::Win32::System::Diagnostics::ToolHelp::{
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     EnumWindows, GetForegroundWindow, GetWindow, GetWindowTextW, GetWindowThreadProcessId,
-    IsWindowVisible, GW_OWNER,
+    IsWindow, IsWindowVisible, GW_OWNER,
 };
 
 pub type Result<T> = std::result::Result<T, ProcessErrorKind>;
@@ -27,6 +28,8 @@ pub enum ProcessErrorKind {
 
     #[error("CreateToolhelp32Snapshot returned INVALID_HANDLE_VALUE")]
     InvalidHandleValue,
+    #[error("Module is not a local module")]
+    ModuleNotLocal,
 
     #[error("Unknown module: {0}")]
     UnknownModule(String),
@@ -183,6 +186,26 @@ impl GameProcess {
 
     /// Get the main window of this process
     ///
+    /// Will keep checking every 100ms until either the `timeout` has been reached, or a [Window] has been found.
+    pub fn get_main_window_blocking(&self, timeout: Option<Duration>) -> Option<Window> {
+        let start = std::time::Instant::now();
+        let timeout = timeout.unwrap_or_else(|| Duration::MAX);
+        loop {
+            let wnd = self.get_main_window();
+
+            if wnd.is_some() {
+                break wnd;
+            } else {
+                std::thread::sleep(Duration::from_millis(100));
+                if start.elapsed() > timeout {
+                    break None;
+                }
+            }
+        }
+    }
+
+    /// Get the main window of this process
+    ///
     /// If no such window yet exists this will return [None]
     pub fn get_main_window(&self) -> Option<Window> {
         struct HandleData {
@@ -296,6 +319,20 @@ impl Window {
     pub fn is_foreground_window(&self) -> bool {
         unsafe { GetForegroundWindow() == self.0 }
     }
+
+    /// Check whether this [Window] is still valid (e.g., it exists)
+    ///
+    /// # Note
+    ///
+    /// Technically this [HWND] could be re-used for a different window, so this is not a guarantee of correctness!
+    pub fn is_valid(&self) -> bool {
+        unsafe { IsWindow(self.0).as_bool() }
+    }
+
+    /// Check whether this [Window] is visible (e.g., it exists)
+    pub fn is_visible(&self) -> bool {
+        unsafe { IsWindowVisible(self.0).as_bool() }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -360,6 +397,11 @@ impl Module {
 }
 
 impl Module {
+    /// Turn this module into a [LocalModule] reference, if this [Module] was taken from a local process.
+    pub fn to_local(self) -> Result<LocalModule> {
+        self.try_into()
+    }
+
     /// Read relative to this module's base address
     ///
     /// # Safety
@@ -423,7 +465,10 @@ impl Module {
 pub struct LocalModule(Module);
 
 impl LocalModule {
-    pub fn new(module: Module) -> anyhow::Result<Self> {
+    /// Try to obtain a local module from the given general [Module]
+    ///
+    /// Will fail if said module was not obtained from a local process.
+    pub fn new(module: Module) -> Result<Self> {
         Self::try_from(module)
     }
 
@@ -478,13 +523,13 @@ impl LocalModule {
 }
 
 impl TryFrom<Module> for LocalModule {
-    type Error = anyhow::Error;
+    type Error = ProcessErrorKind;
 
     fn try_from(module: Module) -> std::result::Result<Self, Self::Error> {
         if module.is_local() {
             Ok(Self(module))
         } else {
-            Err(anyhow::anyhow!("Module is not in the current process"))
+            Err(ProcessErrorKind::ModuleNotLocal)
         }
     }
 }
