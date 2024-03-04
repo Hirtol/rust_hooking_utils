@@ -149,7 +149,7 @@ impl GameProcess {
             };
 
             if name.contains(module_name) {
-                println!(
+                log::trace!(
                     "Base address of {}: {:#X} @ size of {:#X}",
                     name,
                     module.base() as usize,
