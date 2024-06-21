@@ -22,11 +22,10 @@ retour = "0.4.0-alpha.2"
 patternscan = "1.2"
 dll-syringe = { version = "0.15", optional = true }
 libloading = { version = "0.8", optional = true }
-iced-x86 = { version = "1.20", optional = true }
 serde = { version = "1", features = ["derive"] }
 
 [dependencies.windows]
-version = "0.54.0"
+version = "0.57.0"
 features = ["Win32_Foundation", "Win32_Security", "Win32_System_Threading", "Win32_System_SystemServices", "Win32_System_Diagnostics_Debug", "Win32_System_Diagnostics", "Win32_System_Diagnostics_ToolHelp", "Win32_System_SystemInformation", "Win32_Devices_HumanInterfaceDevice", "Win32_System_ProcessStatus", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Memory", "Win32_System_Console"]
 
 [package.metadata.docs.rs]
