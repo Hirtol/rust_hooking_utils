@@ -216,7 +216,8 @@ impl GameProcess {
 
         unsafe extern "system" fn enum_callback(handle: HWND, param: LPARAM) -> BOOL {
             unsafe fn is_main_window(handle: HWND) -> bool {
-                GetWindow(handle, GW_OWNER).0 == 0 && IsWindowVisible(handle).as_bool()
+                // Check that there is no parent window for this handle AND that it is visible.
+                GetWindow(handle, GW_OWNER).is_err() && IsWindowVisible(handle).as_bool()
             }
 
             let data = &mut *(param.0 as *mut HandleData);
@@ -242,7 +243,7 @@ impl GameProcess {
             process_id: self.pid,
             console_window: unsafe {
                 let wnd = windows::Win32::System::Console::GetConsoleWindow();
-                if wnd.0 == 0 {
+                if wnd.is_invalid() {
                     None
                 } else {
                     Some(wnd)
