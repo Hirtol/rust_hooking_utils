@@ -9,12 +9,12 @@ pub mod dinput8;
 ///
 /// # Example
 /// ```norun
-/// fn attach(hinst_dll: windows::Win32::Foundation::HMODULE) -> anyhow::Result<()> {
+/// fn attach(hinst_dll: windows::Win32::Foundation::HMODULE) -> eyre::Result<()> {
 ///     println!("Hello World!");
 ///     Ok(())
 /// }
 ///
-/// fn detach(hinst_dll: windows::Win32::Foundation::HMODULE) -> anyhow::Result<()> {
+/// fn detach(hinst_dll: windows::Win32::Foundation::HMODULE) -> eyre::Result<()> {
 ///     println!("Goodbye World!");
 ///     Ok(())
 /// }

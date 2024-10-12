@@ -41,7 +41,7 @@ pub struct DirectInputProxyManager {
 unsafe impl Sync for DirectInputProxyManager {}
 
 impl DirectInputProxyManager {
-    pub fn new() -> anyhow::Result<Self> {
+    pub fn new() -> eyre::Result<Self> {
         let dinput_path = get_system_directory()?.join("dinput8.dll");
         log::debug!("Loading `dinput8.dll` from {:?}", dinput_path);
 

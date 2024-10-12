@@ -19,7 +19,7 @@ static_detour! {
 
 pub unsafe fn hook_raw_input_data(
     hook: impl Fn(isize, u32, *mut c_void, *mut u32, u32) -> HRESULT + Send + 'static,
-) -> anyhow::Result<()> {
+) -> eyre::Result<()> {
     // Need to define a direct link here due to windows-rs forcing a link to dinput8.dll when it loads the ui_input feature.
     #[link(name = "user32")]
     extern "system" {
@@ -41,7 +41,7 @@ pub unsafe fn hook_raw_input_data(
 
 pub unsafe fn hook_register_raw_input(
     hook: impl Fn(*const RAWINPUTDEVICE, u32, u32) -> windows::Win32::Foundation::BOOL + Send + 'static,
-) -> anyhow::Result<()> {
+) -> eyre::Result<()> {
     #[link(name = "user32")]
     extern "system" {
         fn RegisterRawInputDevices(

@@ -1,8 +1,8 @@
 use std::os::windows::io::FromRawHandle;
 use std::path::Path;
 
-use anyhow::Context;
 use dll_syringe::process::OwnedProcess;
+use eyre::ContextCompat;
 use windows::core::{HSTRING, PWSTR};
 pub use windows::Win32::System::Threading;
 use windows::Win32::System::Threading::{PROCESS_INFORMATION, STARTUPINFOW};
@@ -18,7 +18,7 @@ pub fn launch_process(
     working_dir: &Path,
     exe_path: &Path,
     env: impl Iterator<Item = (String, String)>,
-) -> anyhow::Result<OwnedProcess> {
+) -> eyre::Result<OwnedProcess> {
     let env = std::env::vars()
         .chain(env)
         .fold(String::new(), |acc, (k, v)| format!("{}{}={}", acc, k, v))

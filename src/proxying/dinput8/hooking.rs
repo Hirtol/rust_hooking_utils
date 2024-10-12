@@ -2,7 +2,7 @@
 
 use std::ffi::c_void;
 
-use anyhow::Context;
+use eyre::Context;
 use windows::core::{ComInterface, HRESULT};
 use windows::Win32::Devices::HumanInterfaceDevice::{
     GUID_SysKeyboard, GUID_SysMouse, IDirectInput8W, IDirectInputDevice8W, DIDEVICEOBJECTDATA,
@@ -31,7 +31,7 @@ pub enum DeviceType {
 /// In case the `proxy-dinput8` feature is enabled this will instead opt to call our proxy to call the function
 ///
 /// [MDSN Docs](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ee417799(v=vs.85))
-pub fn get_dinput_interface() -> anyhow::Result<IDirectInput8W> {
+pub fn get_dinput_interface() -> eyre::Result<IDirectInput8W> {
     let executor_module = unsafe { GetModuleHandleW(None)? };
 
     let mut direct_input: Option<IDirectInput8W> = None;
@@ -45,7 +45,7 @@ pub fn get_dinput_interface() -> anyhow::Result<IDirectInput8W> {
             &mut direct_input as *mut _ as *mut *mut _,
             None,
         )
-        .map_err(|e| anyhow::anyhow!("Failed to create DirectInput8 interface: {}", e))?;
+        .map_err(|e| eyre::eyre!("Failed to create DirectInput8 interface: {}", e))?;
     }
 
     #[cfg(feature = "proxy-dinput8")]
@@ -63,7 +63,7 @@ pub fn get_dinput_interface() -> anyhow::Result<IDirectInput8W> {
         .context("Failed to create DirectInput8")?;
     }
 
-    direct_input.ok_or_else(|| anyhow::anyhow!("Failed to create DirectInput8"))
+    direct_input.ok_or_else(|| eyre::eyre!("Failed to create DirectInput8"))
 }
 
 /// Create a `IDirectInputDevice8W`
@@ -74,7 +74,7 @@ pub fn get_dinput_interface() -> anyhow::Result<IDirectInput8W> {
 pub fn create_dinput_device(
     direct_input: &IDirectInput8W,
     device_type: DeviceType,
-) -> anyhow::Result<IDirectInputDevice8W> {
+) -> eyre::Result<IDirectInputDevice8W> {
     let mut device = None;
 
     let guid = match device_type {
@@ -86,5 +86,5 @@ pub fn create_dinput_device(
         direct_input.CreateDevice(guid, &mut device, None)?;
     }
 
-    device.ok_or_else(|| anyhow::anyhow!("Failed to create {:?} device", device_type))
+    device.ok_or_else(|| eyre::eyre!("Failed to create {:?} device", device_type))
 }

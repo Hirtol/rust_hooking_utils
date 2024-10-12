@@ -14,7 +14,7 @@ proxy-dinput8 = ["libloading"]
 hooking-rawinput = []
 
 [dependencies]
-anyhow = "1"
+eyre = "0.6"
 log = "0.4"
 thiserror = "1"
 once_cell = "1"

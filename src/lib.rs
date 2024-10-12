@@ -1,7 +1,5 @@
 //! This library contains utilities and re-exports the dependencies.
 
-#![cfg_attr(doc_cfg, feature(doc_auto_cfg))]
-
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
 use std::path::PathBuf;
@@ -31,7 +29,7 @@ pub mod pointer;
 /// Retrieves the system directory of the current user.
 ///
 /// Here 'pristine' `DLL`s can be found and loaded for proxying.
-pub fn get_system_directory() -> anyhow::Result<PathBuf> {
+pub fn get_system_directory() -> eyre::Result<PathBuf> {
     let mut buffer = [0; 512];
     // SAFETY: If the buffer is too small the written bytes will be larger than `buffer.len()`, and we will return an Err.
     // If for some reason the function fails, it will return `0`, and we return an Err.
@@ -40,7 +38,7 @@ pub fn get_system_directory() -> anyhow::Result<PathBuf> {
     };
 
     if written_bytes == 0 || written_bytes > buffer.len() as u32 {
-        Err(anyhow::anyhow!(
+        Err(eyre::eyre!(
             "Failed to get system directory, written_bytes: {}",
             written_bytes
         ))
@@ -54,7 +52,7 @@ pub fn get_system_directory() -> anyhow::Result<PathBuf> {
 /// Retrieves the path to the given DLL module.
 pub fn get_current_dll_path(
     hinst_dll: windows::Win32::Foundation::HMODULE,
-) -> anyhow::Result<PathBuf> {
+) -> eyre::Result<PathBuf> {
     let mut file_path = [0; 512];
 
     unsafe {
@@ -65,7 +63,7 @@ pub fn get_current_dll_path(
 }
 
 /// Retrieves the current module, if it exists.
-pub fn get_current_module() -> anyhow::Result<HMODULE> {
+pub fn get_current_module() -> eyre::Result<HMODULE> {
     let mut result = HMODULE::default();
 
     unsafe {

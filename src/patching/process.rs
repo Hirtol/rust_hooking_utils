@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::time::Duration;
 use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt};
 
-use anyhow::anyhow;
 use thiserror::Error;
 use windows::Win32::Foundation::{CloseHandle, BOOL, HANDLE, HMODULE, HWND, LPARAM};
 use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory};
@@ -38,7 +37,7 @@ pub enum ProcessErrorKind {
     OtherErr(#[from] windows::core::Error),
 
     #[error(transparent)]
-    Any(#[from] anyhow::Error),
+    Any(#[from] eyre::Error),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -347,10 +346,10 @@ impl Module {
     /// Create a new module from the given handle and module entry
     ///
     /// The `parent_handle` should refer to the owning process.
-    pub fn new(parent: GameProcess, entry: MODULEENTRY32W) -> anyhow::Result<Self> {
+    pub fn new(parent: GameProcess, entry: MODULEENTRY32W) -> eyre::Result<Self> {
         let name = OsString::from_wide(&entry.szModule[..])
             .into_string()
-            .map_err(|e| anyhow!("Failed to convert name: {:?}", e))?;
+            .map_err(|e| eyre::eyre!("Failed to convert name: {:?}", e))?;
 
         Ok(Module {
             entry,
@@ -485,9 +484,9 @@ impl LocalModule {
 
     /// Scan for a particular byte pattern in the module.
     /// Will return a pointer to the first occurrence of the pattern.
-    pub fn scan_for_pattern(&self, pattern: &str) -> anyhow::Result<*mut u8> {
+    pub fn scan_for_pattern(&self, pattern: &str) -> eyre::Result<*mut u8> {
         let offset = patternscan::scan_first_match(std::io::Cursor::new(self.as_bytes()), pattern)?
-            .ok_or_else(|| anyhow::anyhow!("Couldn't find pattern"))?;
+            .ok_or_else(|| eyre::eyre!("Couldn't find pattern"))?;
 
         unsafe { Ok(self.base().add(offset)) }
     }
@@ -501,19 +500,19 @@ impl LocalModule {
         &self,
         after: *mut u8,
         pattern: &str,
-    ) -> anyhow::Result<*mut u8> {
+    ) -> eyre::Result<*mut u8> {
         let base_offset = self.ptr_to_relative_addr(after) as usize;
         let to_scan = &self.as_bytes()[base_offset..];
 
         let offset = patternscan::scan_first_match(std::io::Cursor::new(to_scan), pattern)?
-            .ok_or_else(|| anyhow::anyhow!("Couldn't find pattern"))?;
+            .ok_or_else(|| eyre::eyre!("Couldn't find pattern"))?;
 
         Ok(self.base().add(base_offset + offset))
     }
 
     /// Scan for a particular byte pattern in the module.
     /// Will return all occurrences of the pattern.
-    pub fn scan_for_all_pattern(&self, pattern: &str) -> anyhow::Result<Vec<*mut u8>> {
+    pub fn scan_for_all_pattern(&self, pattern: &str) -> eyre::Result<Vec<*mut u8>> {
         let offsets = patternscan::scan(std::io::Cursor::new(self.as_bytes()), pattern)?;
 
         Ok(offsets
