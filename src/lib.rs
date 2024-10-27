@@ -24,6 +24,7 @@ pub mod patching;
 
 pub mod raw_input;
 
+pub mod pausing;
 pub mod pointer;
 
 /// Retrieves the system directory of the current user.
