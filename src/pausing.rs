@@ -24,7 +24,7 @@ pub unsafe fn suspend_all_threads<T>(
         loop {
             if entry.th32ThreadID != current_thread_id && entry.th32OwnerProcessID == process.pid {
                 // tracing::info!("Going to pause: {} - {current_thread_id:?}", entry.th32ThreadID);
-                let thread_handle = OpenThread(THREAD_ALL_ACCESS, None, entry.th32ThreadID)?;
+                let thread_handle = OpenThread(THREAD_ALL_ACCESS, false, entry.th32ThreadID)?;
                 if !thread_handle.is_invalid() {
                     to_resume.push(entry.th32ThreadID);
                     SuspendThread(thread_handle);
@@ -47,7 +47,7 @@ pub unsafe fn suspend_all_threads<T>(
         let out = critical_section()?;
 
         for thread_id in to_resume {
-            let thread_handle = OpenThread(THREAD_ALL_ACCESS, None, thread_id)?;
+            let thread_handle = OpenThread(THREAD_ALL_ACCESS, false, thread_id)?;
             if !thread_handle.is_invalid() {
                 ResumeThread(thread_handle);
                 CloseHandle(thread_handle)?;
@@ -76,7 +76,7 @@ pub unsafe fn resume_all_threads(process: GameProcess) -> eyre::Result<()> {
         loop {
             // tracing::info!("Going to unpause: {}", entry.th32ThreadID);
             if entry.th32ThreadID != current_thread_id && entry.th32OwnerProcessID == process.pid {
-                let thread_handle = OpenThread(THREAD_ALL_ACCESS, None, entry.th32ThreadID)?;
+                let thread_handle = OpenThread(THREAD_ALL_ACCESS, false, entry.th32ThreadID)?;
                 if !thread_handle.is_invalid() {
                     ResumeThread(thread_handle);
                     CloseHandle(thread_handle)?;

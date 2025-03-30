@@ -4,7 +4,8 @@ use std::time::Duration;
 use std::{ffi::OsString, mem, os::windows::ffi::OsStringExt};
 
 use thiserror::Error;
-use windows::Win32::Foundation::{CloseHandle, BOOL, HANDLE, HMODULE, HWND, LPARAM};
+use windows::core::BOOL;
+use windows::Win32::Foundation::{CloseHandle, HANDLE, HMODULE, HWND, LPARAM};
 use windows::Win32::System::Diagnostics::Debug::{ReadProcessMemory, WriteProcessMemory};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Module32FirstW, Module32NextW, MODULEENTRY32W, TH32CS_SNAPMODULE,
@@ -326,7 +327,7 @@ impl Window {
     ///
     /// Technically this [HWND] could be re-used for a different window, so this is not a guarantee of correctness!
     pub fn is_valid(&self) -> bool {
-        unsafe { IsWindow(self.0).as_bool() }
+        unsafe { IsWindow(Some(self.0)).as_bool() }
     }
 
     /// Check whether this [Window] is visible (e.g., it exists)

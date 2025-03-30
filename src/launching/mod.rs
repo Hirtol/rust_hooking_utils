@@ -3,7 +3,7 @@ use std::path::Path;
 
 use dll_syringe::process::OwnedProcess;
 use eyre::ContextCompat;
-use windows::core::{HSTRING, PWSTR};
+use windows::core::HSTRING;
 pub use windows::Win32::System::Threading;
 use windows::Win32::System::Threading::{PROCESS_INFORMATION, STARTUPINFOW};
 
@@ -34,7 +34,7 @@ pub fn launch_process(
     unsafe {
         Threading::CreateProcessW(
             &exe_path,
-            PWSTR::null(),
+            None,
             None,
             None,
             false,
