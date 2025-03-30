@@ -1,4 +1,5 @@
 //! This library contains utilities and re-exports the dependencies.
+#![allow(unsafe_op_in_unsafe_fn)]
 
 use std::ffi::OsString;
 use std::os::windows::ffi::OsStringExt;
@@ -11,7 +12,7 @@ pub use patternscan;
 pub use retour;
 use windows::Win32::Foundation::HMODULE;
 use windows::Win32::System::LibraryLoader::{
-    GetModuleFileNameW, GetModuleHandleExW, GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, GetModuleFileNameW, GetModuleHandleExW,
 };
 
 pub mod proxying;

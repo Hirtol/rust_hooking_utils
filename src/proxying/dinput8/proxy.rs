@@ -7,8 +7,8 @@ use std::ffi::c_void;
 
 use libloading::os::windows::Symbol;
 use once_cell::sync::Lazy;
-use windows::core::{GUID, HRESULT};
 use windows::Win32::Foundation::HMODULE;
+use windows::core::{GUID, HRESULT};
 
 use crate::get_system_directory;
 
@@ -66,7 +66,7 @@ impl DirectInputProxyManager {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "system" fn DirectInput8Create(
     h_inst: HMODULE,
     dw_version: u32,
@@ -78,13 +78,13 @@ pub unsafe extern "system" fn DirectInput8Create(
     (DINPUT_MANAGER.direct_input_8_create)(h_inst, dw_version, rii_dltf, ppv_out, punk_outer)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "system" fn DllCanUnloadNow() -> HRESULT {
     log::trace!("DllCanUnloadNow called");
     (DINPUT_MANAGER.dll_can_unload_now)()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "system" fn DllGetClassObject(
     rclsid: *const GUID,
     riid: *const GUID,
@@ -94,13 +94,13 @@ pub unsafe extern "system" fn DllGetClassObject(
     (DINPUT_MANAGER.dll_get_class_object)(rclsid, riid, ppv)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "system" fn DllRegisterServer() -> HRESULT {
     log::trace!("DllRegisterServer called");
     (DINPUT_MANAGER.dll_register_server)()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "system" fn DllUnregisterServer() -> HRESULT {
     log::trace!("DllUnregisterServer called");
     (DINPUT_MANAGER.dll_unregister_server)()

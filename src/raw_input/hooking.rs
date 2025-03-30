@@ -1,7 +1,7 @@
 use retour::static_detour;
 use std::ffi::c_void;
-use windows::core::HRESULT;
 use windows::Win32::Foundation::HWND;
+use windows::core::HRESULT;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub struct RAWINPUTDEVICE {
 
 static_detour! {
     pub static D_GET_RAW_INPUT_DATA: extern "system" fn(isize, u32, *mut c_void, *mut u32, u32) -> HRESULT;
-    pub static D_REGISTER_RAW_INPUT_DEV: extern "system" fn(*const RAWINPUTDEVICE, u32, u32) -> windows::Win32::Foundation::BOOL;
+    pub static D_REGISTER_RAW_INPUT_DEV: extern "system" fn(*const RAWINPUTDEVICE, u32, u32) -> windows::core::BOOL;
 }
 
 pub unsafe fn hook_raw_input_data(
@@ -22,7 +22,7 @@ pub unsafe fn hook_raw_input_data(
 ) -> eyre::Result<()> {
     // Need to define a direct link here due to windows-rs forcing a link to dinput8.dll when it loads the ui_input feature.
     #[link(name = "user32")]
-    extern "system" {
+    unsafe extern "system" {
         fn GetRawInputData(
             hrawinput: isize,
             uicommand: u32,
@@ -40,15 +40,15 @@ pub unsafe fn hook_raw_input_data(
 }
 
 pub unsafe fn hook_register_raw_input(
-    hook: impl Fn(*const RAWINPUTDEVICE, u32, u32) -> windows::Win32::Foundation::BOOL + Send + 'static,
+    hook: impl Fn(*const RAWINPUTDEVICE, u32, u32) -> windows::core::BOOL + Send + 'static,
 ) -> eyre::Result<()> {
     #[link(name = "user32")]
-    extern "system" {
+    unsafe extern "system" {
         fn RegisterRawInputDevices(
             prawinputdevices: *const RAWINPUTDEVICE,
             uinumdevices: u32,
             cbsize: u32,
-        ) -> windows::Win32::Foundation::BOOL;
+        ) -> windows::core::BOOL;
     }
 
     D_REGISTER_RAW_INPUT_DEV.initialize(

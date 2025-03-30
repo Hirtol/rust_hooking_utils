@@ -24,7 +24,7 @@ pub mod dinput8;
 #[macro_export]
 macro_rules! dll_main {
     ($attach:path, $detach:path) => {
-        #[no_mangle]
+        #[unsafe(no_mangle)]
         pub unsafe extern "system" fn DllMain(
             hinst_dll: windows::Win32::Foundation::HMODULE,
             fdw_reason: u32,
