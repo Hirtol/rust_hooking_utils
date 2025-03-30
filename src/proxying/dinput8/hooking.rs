@@ -3,7 +3,7 @@
 use std::ffi::c_void;
 
 use eyre::Context;
-use windows::core::{ComInterface, HRESULT};
+use windows::core::{Interface, HRESULT};
 use windows::Win32::Devices::HumanInterfaceDevice::{
     GUID_SysKeyboard, GUID_SysMouse, IDirectInput8W, IDirectInputDevice8W, DIDEVICEOBJECTDATA,
     DIRECTINPUT_VERSION,
