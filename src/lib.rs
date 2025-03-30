@@ -25,6 +25,7 @@ pub mod patching;
 
 pub mod raw_input;
 
+pub mod console;
 pub mod pausing;
 pub mod pointer;
 
