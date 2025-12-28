@@ -8,8 +8,8 @@ pub struct KeyboardManager {
 impl KeyboardManager {
     pub fn new() -> Self {
         KeyboardManager {
-            keys: [KeyState::Up; 256],
-            next_frame: [KeyState::Up; 256],
+            keys: [KeyState::Released; 256],
+            next_frame: [KeyState::Released; 256],
         }
     }
 
