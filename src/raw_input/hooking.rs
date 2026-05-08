@@ -15,6 +15,7 @@ pub struct RAWINPUTDEVICE {
 static_detour! {
     pub static D_GET_RAW_INPUT_DATA: extern "system" fn(isize, u32, *mut c_void, *mut u32, u32) -> HRESULT;
     pub static D_REGISTER_RAW_INPUT_DEV: extern "system" fn(*const RAWINPUTDEVICE, u32, u32) -> windows::core::BOOL;
+    pub static D_XINPUT_GET_STATE: extern "system" fn(u32, *mut c_void) -> u32;
 }
 
 pub unsafe fn hook_raw_input_data(
@@ -57,6 +58,24 @@ pub unsafe fn hook_register_raw_input(
     )?;
 
     D_REGISTER_RAW_INPUT_DEV.enable()?;
+
+    Ok(())
+}
+
+pub unsafe fn hook_xinput_get_state(
+    hook: impl Fn(u32, *mut c_void) -> u32 + Send + 'static,
+) -> eyre::Result<()> {
+    #[link(name = "xinput1_4")]
+    unsafe extern "system" {
+        fn XInputGetState(dwuserindex: u32, pstate: *mut c_void) -> u32;
+    }
+
+    D_XINPUT_GET_STATE.initialize(
+        std::mem::transmute(XInputGetState as *const c_void),
+        hook,
+    )?;
+
+    D_XINPUT_GET_STATE.enable()?;
 
     Ok(())
 }
